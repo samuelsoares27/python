@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcrição de Vídeos</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="card shadow-lg p-4 mt-5">
+            <h1 class="text-center mb-4">🎤 Transcrição de Vídeos do YouTube</h1>
+
+            <div class="input-group mb-3">
+                <input type="text" id="videoUrl" class="form-control" placeholder="Cole o link do vídeo aqui">
+                <button class="btn btn-primary" onclick="transcribeVideo()">Transcrever</button>
+            </div>
+
+            <div id="status" class="alert alert-info text-center" style="display: none;"></div>
+
+            <div class="card mt-4 p-3">
+                <h5>Transcrição:</h5>
+                <pre id="transcription"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function transcribeVideo() {
+            const videoUrl = document.getElementById("videoUrl").value;
+            const statusEl = document.getElementById("status");
+            const transcriptionEl = document.getElementById("transcription");
+
+            if (!videoUrl) {
+                alert("Por favor, insira um link do YouTube!");
+                return;
+            }
+
+            statusEl.style.display = "block";
+            statusEl.className = "alert alert-warning";
+            statusEl.innerText = "⏳ Transcrevendo... Aguarde!";
+
+            const response = await fetch("/transcribe", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ video_url: videoUrl })
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                statusEl.className = "alert alert-danger";
+                statusEl.innerText = "Erro: " + data.error;
+            } else {
+                statusEl.className = "alert alert-success";
+                statusEl.innerText = "✅ Transcrição concluída!";
+                transcriptionEl.innerText = data.transcription;
+            }
+        }
+    </script>
+
+</body>
+
+</html>
