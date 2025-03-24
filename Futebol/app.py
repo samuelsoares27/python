@@ -140,6 +140,20 @@ class FutebolRanking:
         else:
             messagebox.showerror("Erro", "Por favor, selecione uma partida para excluir.")
 
+    def ordenar_coluna(self, coluna, reverse):
+            """Ordena a Treeview pela coluna de médias corretamente como float."""
+            dados = [(self.medias_jogadores.item(item, "values"), item) for item in self.medias_jogadores.get_children()]
+            
+            if coluna == "Média":
+                dados.sort(key=lambda x: float(x[0][3]), reverse=reverse)  # Índice 3 é a coluna Média
+
+            # Reorganizar os itens na Treeview
+            for index, (_, item) in enumerate(dados):
+                self.medias_jogadores.move(item, "", index)
+
+            # Inverter a ordem para alternar entre crescente e decrescente
+            self.medias_jogadores.heading(coluna, command=lambda: self.ordenar_coluna(coluna, not reverse))
+
     def iniciar_interface(self):
         self.root = tk.Tk()
         self.root.title("Sistema de Futebol")
@@ -216,7 +230,7 @@ class FutebolRanking:
         self.historico_jogos.heading("ID", text="ID")
         self.historico_jogos.heading("Nome", text="Nome")
         self.historico_jogos.heading("Data", text="Data")
-        self.historico_jogos.heading("Nota", text="Nota")
+        self.historico_jogos.heading("Nota", text="Nota")                
         
         # Scrollbar para o histórico
         scrollbar_historico = tk.Scrollbar(aba_historico, orient="vertical", command=self.historico_jogos.yview)
@@ -231,7 +245,7 @@ class FutebolRanking:
         self.medias_jogadores.heading("ID", text="ID")
         self.medias_jogadores.heading("Nome", text="Nome")
         self.medias_jogadores.heading("Posição", text="Posição")
-        self.medias_jogadores.heading("Média", text="Média")
+        self.medias_jogadores.heading("Média", text="Média", command=lambda: self.ordenar_coluna("Média", False))  # Adiciona ordenação
         
         # Scrollbar para médias
         scrollbar_medias = tk.Scrollbar(aba_medias, orient="vertical", command=self.medias_jogadores.yview)
