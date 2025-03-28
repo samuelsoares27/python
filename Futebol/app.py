@@ -97,12 +97,25 @@ class FutebolRanking:
             self.historico_jogos.insert("", "end", values=partida)
     
     def atualizar_medias(self):
-        for item in self.medias_jogadores.get_children():
-            self.medias_jogadores.delete(item)
-        self.cursor.execute("SELECT j.id, j.nome, j.posicao, COALESCE(AVG(p.nota), 0) FROM jogadores j LEFT JOIN partidas p ON j.id = p.jogador_id GROUP BY j.id")
-        medias = self.cursor.fetchall()
-        for media in medias:
-            self.medias_jogadores.insert("", "end", values=media)
+        """Atualiza a aba de médias com a média de notas e total de partidas de cada jogador."""
+        self.medias_jogadores.delete(*self.medias_jogadores.get_children())  # Limpa os dados antigos
+        
+        self.cursor.execute("SELECT id, nome, posicao FROM Jogadores")
+        jogadores = self.cursor.fetchall()
+        
+        for jogador in jogadores:
+            jogador_id, nome, posicao = jogador
+            
+            # Obtém as notas das partidas do jogador
+            self.cursor.execute("SELECT nota FROM Partidas WHERE jogador_id = ?", (jogador_id,))
+            notas = [row[0] for row in self.cursor.fetchall()]
+            
+            total_partidas = len(notas)  # Número total de partidas disputadas
+            media = round(sum(notas) / total_partidas, 2) if total_partidas > 0 else 0  # Calcula a média
+            
+            # Insere os dados na tabela de médias
+            self.medias_jogadores.insert("", "end", values=(jogador_id, nome, posicao, media, total_partidas))
+
     
     def excluir_jogador(self):
         selected_item = self.lista_jogadores.selection()  # Pega o item selecionado na tabela
@@ -241,11 +254,12 @@ class FutebolRanking:
         self.atualizar_historico()
         
         # Aba Médias
-        self.medias_jogadores = ttk.Treeview(aba_medias, columns=("ID", "Nome", "Posição", "Média"), show="headings")
+        self.medias_jogadores = ttk.Treeview(aba_medias, columns=("ID", "Nome", "Posição", "Média", "Partidas"), show="headings")
         self.medias_jogadores.heading("ID", text="ID")
         self.medias_jogadores.heading("Nome", text="Nome")
         self.medias_jogadores.heading("Posição", text="Posição")
         self.medias_jogadores.heading("Média", text="Média", command=lambda: self.ordenar_coluna("Média", False))  # Adiciona ordenação
+        self.medias_jogadores.heading("Partidas", text="Partidas") 
         
         # Scrollbar para médias
         scrollbar_medias = tk.Scrollbar(aba_medias, orient="vertical", command=self.medias_jogadores.yview)
